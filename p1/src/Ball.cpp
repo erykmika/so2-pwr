@@ -1,13 +1,17 @@
 #include "Ball.h"
 
-Ball::Ball()
+Ball::Ball(uint8_t id, Coords &coords)
 {
-    health = BALL_HEALTH;
-    delayLimit = rand() % 4 + 2;
-    delayCounter = 0;
+    this->id = id;
+    this->coords = coords;
+    this->health = BALL_HEALTH;
+    this->delayLimit = rand() % 4 + 2;
+    this->delayCounter = 0;
 }
 
-int Ball::getHealth() const
+/* Wait and then start the ball thread logic */
+void Ball::run()
 {
-    return health;
+    srand(time(NULL));
+    sleep(rand() % (MOD_DELAY) + BALL_MIN_DELAY);
 }

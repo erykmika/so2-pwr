@@ -1,24 +1,28 @@
 #ifndef BALL
 #define BALL
 
-#include <random>
+#include "env.h"
+#include "Coords.h"
 
-#define BALL_HEALTH 5  // Number of bounces before disappearing
-#define DELAY_TIME 250 // ms
-
+/* Class representing a Ball objects that is a single thread of execution */
 class Ball
 {
 public:
-    Ball();
-    int getHealth() const;
+    Ball(uint8_t id, Coords &coords);
+    void run();
 
 private:
+    void move();
+    /* Ball id */
+    uint8_t id;
     /* Number of remaining bounces */
-    unsigned short health;
-    /* Number of phases (that are DELAY_TIME long) needed to make a move */
-    unsigned short delayLimit;
+    uint8_t health;
+    /* Number of TICKs needed to make a move */
+    uint8_t delayLimit;
     /* Current number of delay phases passed */
-    unsigned short delayCounter;
+    uint8_t delayCounter;
+    /* Reference to Coords struct */
+    Coords coords;
 };
 
 #endif
