@@ -1,29 +1,28 @@
 #include "Screen.h"
 
-Screen::Screen(Coords &coords)
+Screen::Screen(Coords *coords)
 {
-    this->curCoords = coords;
-    this->oldCoords = Coords();
+    curCoords = coords;
     window = nullptr;
 }
 
-void Screen::initThread(Coords &coords)
+void Screen::initThread(Coords *coords)
 {
     Screen scr(coords);
-    std::thread scr_thread(&Screen::run, &scr);
-    scr_thread.join();
-}
-
-void Screen::run()
-{
-    initScreen();
+    scr.initScreen();
+    while (true)
+    {
+        scr.updateScreen();
+        refresh();
+        std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE));
+    }
     getch();
     endwin();
 }
 
 void Screen::initScreen()
 {
-    WINDOW *window = initscr();
+    window = initscr();
     noecho();
     curs_set(0);
 
@@ -44,4 +43,25 @@ void Screen::initScreen()
         mvprintw(i, 0, "X");
         mvprintw(i, WINDOW_WIDTH - 1, "X");
     }
+    refresh();
+}
+
+void Screen::updateScreen()
+{
+    for (unsigned i = 0; i < oldX.size(); i++)
+    {
+        mvwprintw(window, oldY[i], oldX[i], " ");
+    }
+    oldX.clear();
+    oldY.clear();
+    for (auto i = 0; i < NUM_OF_BALLS; i++)
+    {
+        if (curCoords->ballsX[i])
+        {
+            mvwprintw(window, curCoords->ballsY[i], curCoords->ballsX[i], "O");
+            oldX.push_back(curCoords->ballsX[i]);
+            oldY.push_back(curCoords->ballsY[i]);
+        }
+    }
+    refresh();
 }

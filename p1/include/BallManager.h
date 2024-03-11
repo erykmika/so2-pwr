@@ -2,12 +2,13 @@
 #define BALL_MANAGER
 
 #include "env.h"
+#include "Ball.h"
 
 /* Thread class managing the Ball thread instances*/
 class BallManager
 {
 public:
-    static void runThread();
+    static void initThread(Coords *coords);
 };
 
 #endif
