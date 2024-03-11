@@ -4,17 +4,24 @@
 
 int main()
 {
-    Coords *coords = new Coords;
+    /* Data struct initialization */
+    Data *data = new Data;
     for (auto i = 0; i < NUM_OF_BALLS; i++)
     {
-        coords->ballsX[i] = 0;
-        coords->ballsY[i] = 0;
+        data->ballsX[i] = 0;
+        data->ballsY[i] = 0;
+        data->ballsAlive.push_back(false);
     }
-    std::thread ballManagerThr(BallManager::initThread, coords);
-    std::thread screenThr(Screen::initThread, coords);
+    data->exit_flag = ERR;
 
-    ballManagerThr.join();
+    // Spawn threads
+    std::thread ballManagerThr(BallManager::initThread, data);
+    std::thread screenThr(Screen::run, data);
+
+    // Wait for threads to complete
     screenThr.join();
+    ballManagerThr.join();
 
-    delete coords;
+    // Free resources
+    delete data;
 }

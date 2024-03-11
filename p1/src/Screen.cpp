@@ -1,20 +1,21 @@
 #include "Screen.h"
 
-Screen::Screen(Coords *coords)
+Screen::Screen(Data *data)
 {
-    curCoords = coords;
+    curData = data;
     window = nullptr;
 }
 
-void Screen::initThread(Coords *coords)
+void Screen::run(Data *data)
 {
-    Screen scr(coords);
+    Screen scr(data);
     scr.initScreen();
-    while (true)
+    while (data->exit_flag != EXIT_KEY)
     {
         scr.updateScreen();
         refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE));
+        data->exit_flag = getch();
     }
     getch();
     endwin();
@@ -25,6 +26,7 @@ void Screen::initScreen()
     window = initscr();
     noecho();
     curs_set(0);
+    nodelay(window, 1);
 
     // Specify window size
     wresize(window, WINDOW_HEIGHT, WINDOW_WIDTH);
@@ -56,11 +58,11 @@ void Screen::updateScreen()
     oldY.clear();
     for (auto i = 0; i < NUM_OF_BALLS; i++)
     {
-        if (curCoords->ballsX[i])
+        if (curData->ballsAlive[i])
         {
-            mvwprintw(window, curCoords->ballsY[i], curCoords->ballsX[i], "O");
-            oldX.push_back(curCoords->ballsX[i]);
-            oldY.push_back(curCoords->ballsY[i]);
+            mvwprintw(window, curData->ballsY[i], curData->ballsX[i], "O");
+            oldX.push_back(curData->ballsX[i]);
+            oldY.push_back(curData->ballsY[i]);
         }
     }
     refresh();

@@ -33,4 +33,7 @@
 #define BALL_MAX_DELAY 8 // s
 #define MOD_DELAY BALL_MAX_DELAY + 1 - BALL_MIN_DELAY
 
+/** Exit key */
+#define EXIT_KEY ' '
+
 #endif

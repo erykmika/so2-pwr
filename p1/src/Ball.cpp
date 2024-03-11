@@ -1,21 +1,22 @@
 #include "Ball.h"
 
 /* Wait and then start the ball thread logic */
-void Ball::run(uint8_t id, Coords *coords)
+void Ball::run(uint8_t id, Data *data)
 {
-    // uint8_t health = BALL_HEALTH;
+    data->ballsAlive[id] = true;
     sleep(rand() % (MOD_DELAY) + BALL_MIN_DELAY);
 
+    uint8_t health = BALL_HEALTH;
     uint8_t delayLimit = rand() % (MOD_SPEED) + MAX_SPEED;
 
-    uint8_t &x = coords->ballsX[id];
-    uint8_t &y = coords->ballsY[id];
+    uint8_t &x = data->ballsX[id];
+    uint8_t &y = data->ballsY[id];
 
     x = rand() % (WINDOW_WIDTH - 39) + 20;
     y = SPAWN_Y;
     uint8_t yDirection = -1;
     uint8_t xDirection = (rand() % 3) - 1; // <-1, 1>
-    while (1)
+    while (health && data->exit_flag != EXIT_KEY)
     {
         for (auto i = 0; i < delayLimit; i++)
         {
@@ -32,6 +33,7 @@ void Ball::run(uint8_t id, Coords *coords)
             {
                 xDirection = rand() % 3 - 1;
             }
+            --health;
         }
         // left & right edge
         if (x == 1 || x == WINDOW_WIDTH - 2)
@@ -41,9 +43,11 @@ void Ball::run(uint8_t id, Coords *coords)
             {
                 yDirection = rand() % 3 - 1;
             }
+            --health;
         }
-
         x += xDirection;
         y += yDirection;
     }
+    // Ball disappears
+    data->ballsAlive[id] = false;
 }

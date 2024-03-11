@@ -2,13 +2,13 @@
 #define BALL
 
 #include "env.h"
-#include "Coords.h"
+#include "Data.h"
 
 /* Class representing Ball objects that are single threads of execution */
 class Ball
 {
 public:
-    static void run(uint8_t id, Coords *coords);
+    static void run(uint8_t id, Data *data);
 };
 
 #endif

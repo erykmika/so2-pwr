@@ -3,19 +3,19 @@
 
 #include <ncurses.h>
 #include "env.h"
-#include "Coords.h"
+#include "Data.h"
 
 // Class responsible for the ncurses screen thread
 class Screen
 {
 public:
-    static void initThread(Coords *coords);
+    static void run(Data *data);
 
 private:
-    Screen(Coords *coords);
+    Screen(Data *data);
     void initScreen();
     void updateScreen();
-    Coords *curCoords;
+    Data *curData;
     std::vector<uint8_t> oldX;
     std::vector<uint8_t> oldY;
     WINDOW *window;
