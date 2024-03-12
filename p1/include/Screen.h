@@ -5,7 +5,7 @@
 #include "env.h"
 #include "Data.h"
 
-// Class responsible for the ncurses screen thread
+/* Class responsible for the ncurses screen thread */
 class Screen
 {
 public:
@@ -18,6 +18,8 @@ private:
     Data *curData;
     std::vector<uint8_t> oldX;
     std::vector<uint8_t> oldY;
+    uint8_t oldGrayX;
+    uint8_t oldGrayY;
     WINDOW *window;
 };
 

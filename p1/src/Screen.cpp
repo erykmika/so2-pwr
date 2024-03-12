@@ -50,6 +50,7 @@ void Screen::initScreen()
 
 void Screen::updateScreen()
 {
+    // Update balls
     for (unsigned i = 0; i < oldX.size(); i++)
     {
         mvwprintw(window, oldY[i], oldX[i], " ");
@@ -65,5 +66,37 @@ void Screen::updateScreen()
             oldY.push_back(curData->ballsY[i]);
         }
     }
+
+    refresh();
+
+    // Update gray area
+    if (oldGrayX)
+    {
+        for (uint8_t v = oldGrayY; v > oldGrayY - GRAY_HEIGHT; v--)
+        {
+            for (uint8_t h = oldGrayX; h < oldGrayX + GRAY_WIDTH; h++)
+            {
+                mvwprintw(window, v, h, " ");
+            }
+        }
+    }
+
+    refresh();
+
+    if (curData->grayAlive)
+    {
+        for (uint8_t v = curData->grayY; v > curData->grayY - GRAY_HEIGHT; v--)
+        {
+            for (uint8_t h = curData->grayX; h < curData->grayX + GRAY_WIDTH; h++)
+            {
+                mvwprintw(window, v, h, "#");
+            }
+        }
+    }
+
+    oldGrayX = curData->grayX;
+    oldGrayY = curData->grayY;
+
+    // Refresh screen
     refresh();
 }

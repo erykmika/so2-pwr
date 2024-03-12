@@ -8,7 +8,7 @@
 class BallManager
 {
 public:
-    static void initThread(Data *data);
+    static void run(Data *data);
 };
 
 #endif

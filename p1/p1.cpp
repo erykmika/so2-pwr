@@ -1,6 +1,7 @@
 #include "env.h"
 #include "Screen.h"
 #include "BallManager.h"
+#include "Gray.h"
 
 int main()
 {
@@ -13,13 +14,18 @@ int main()
         data->ballsAlive.push_back(false);
     }
     data->exit_flag = ERR;
+    data->grayX = 0;
+    data->grayY = 0;
+    data->grayAlive = false;
 
     // Spawn threads
-    std::thread ballManagerThr(BallManager::initThread, data);
+    std::thread ballManagerThr(BallManager::run, data);
+    std::thread grayThr(Gray::run, data);
     std::thread screenThr(Screen::run, data);
 
     // Wait for threads to complete
     screenThr.join();
+    grayThr.join();
     ballManagerThr.join();
 
     // Free resources

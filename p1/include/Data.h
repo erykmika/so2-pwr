@@ -17,6 +17,8 @@ struct Data
     /** Gray area left bottom point */
     uint8_t grayX = 0;
     uint8_t grayY = 0;
+    /** Is gray area active */
+    bool grayAlive;
     /** Exit key flag */
     int exit_flag;
 };
