@@ -4,6 +4,12 @@ Screen::Screen(Data *data)
 {
     curData = data;
     window = nullptr;
+
+    for (auto i = 0; i < NUM_OF_BALLS; i++)
+    {
+        std::string ball_char(1, (char)(i + 65));
+        ballSymbols.push_back(ball_char);
+    }
 }
 
 void Screen::run(Data *data)
@@ -24,12 +30,25 @@ void Screen::run(Data *data)
 void Screen::initScreen()
 {
     window = initscr();
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLUE);
+    init_pair(2, COLOR_BLACK, COLOR_BLUE);
     noecho();
     curs_set(0);
     nodelay(window, 1);
 
     // Specify window size
     wresize(window, WINDOW_HEIGHT, WINDOW_WIDTH);
+
+    attron(COLOR_PAIR(1));
+
+    for (unsigned i = 0; i < WINDOW_HEIGHT; i++)
+    {
+        for (unsigned j = 0; j < WINDOW_WIDTH; j++)
+        {
+            mvwprintw(window, i, j, " ");
+        }
+    }
 
     /* Draw edges */
     // Horizontal
@@ -57,17 +76,20 @@ void Screen::updateScreen()
     }
     oldX.clear();
     oldY.clear();
+    attron(COLOR_PAIR(1));
     for (auto i = 0; i < NUM_OF_BALLS; i++)
     {
         if (curData->ballsAlive[i])
         {
-            mvwprintw(window, curData->ballsY[i], curData->ballsX[i], "O");
+            mvwprintw(window, curData->ballsY[i], curData->ballsX[i], "%s", ballSymbols[i].c_str());
             oldX.push_back(curData->ballsX[i]);
             oldY.push_back(curData->ballsY[i]);
         }
     }
 
     refresh();
+
+    attron(COLOR_PAIR(2));
 
     // Update gray area
     if (oldGrayX)

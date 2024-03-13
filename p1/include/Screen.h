@@ -18,6 +18,7 @@ private:
     Data *curData;
     std::vector<uint8_t> oldX;
     std::vector<uint8_t> oldY;
+    std::vector<std::string> ballSymbols;
     uint8_t oldGrayX;
     uint8_t oldGrayY;
     WINDOW *window;
