@@ -13,10 +13,9 @@
 #include <cstdint>
 #include <chrono>
 
-/** Own header files */
 /* ncurses screen properties */
-#define WINDOW_WIDTH 70
-#define WINDOW_HEIGHT 30
+#define WINDOW_WIDTH 90
+#define WINDOW_HEIGHT 40
 #define REFRESH_RATE 100 // ms
 
 #define TICK 100 // ms
@@ -26,7 +25,7 @@
 #define BALL_HEALTH 5   // Number of bounces before disappearing
 #define SPAWN_X_LEN 20
 #define LOW_X_SPAWN (WINDOW_WIDTH / 2) - (SPAWN_X_LEN / 2)
-#define SPAWN_Y (WINDOW_HEIGHT - 3) // y value of balls spawn point
+#define SPAWN_Y (WINDOW_HEIGHT - 2) // y value of balls spawn point
 #define MIN_SPEED 3                 // Min ball ticks (ticks/move)
 #define MAX_SPEED 1                 // Max ball ticks (ticks/move)
 #define MOD_SPEED MIN_SPEED + 1 - MAX_SPEED
