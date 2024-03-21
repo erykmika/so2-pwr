@@ -19,6 +19,7 @@ void Gray::run(Data *data)
 
         while (data->exit_flag != EXIT_KEY)
         {
+            // Bounce off horizontal edges, change speed to random value
             if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
             {
                 yDirection = -yDirection;

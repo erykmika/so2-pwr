@@ -13,14 +13,23 @@ void Ball::run(uint8_t id, Data *data)
         uint8_t &x = data->ballsX[id];
         uint8_t &y = data->ballsY[id];
 
+        uint8_t yDirection = -1;
+        uint8_t xDirection = (rand() % 3) - 1; // <-1, 1>
+
+        // Ball enters the board
         x = (rand() % SPAWN_X_LEN) + LOW_X_SPAWN;
         y = SPAWN_Y;
 
         // From now on the ball can be drawn on screen
         data->ballsAlive[id] = true;
 
-        uint8_t yDirection = -1;
-        uint8_t xDirection = (rand() % 3) - 1; // <-1, 1>
+        for (auto i = 0; i < delayLimit; i++)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
+        }
+
+        x += xDirection;
+        y += yDirection;
 
         while (health && data->exit_flag != EXIT_KEY)
         {
@@ -30,13 +39,20 @@ void Ball::run(uint8_t id, Data *data)
             }
 
             /* Collision detection */
+            bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
+            bool vertical_collision = (x == 1 || x == WINDOW_WIDTH - 2);
+
+            // corner collision
+            if (horizontal_collision && vertical_collision)
+            {
+                xDirection = -xDirection;
+                yDirection = -yDirection;
+            }
 
             // upper & bottom edge
-            if (y == 1 || y == WINDOW_HEIGHT - 2)
+            else if (horizontal_collision)
             {
                 yDirection = -yDirection;
-                // if (x == 1 || x == WINDOW_WIDTH-2)
-                //    xDirection =
                 if (xDirection == 0)
                 {
                     xDirection = rand() % 3 - 1;
@@ -44,7 +60,7 @@ void Ball::run(uint8_t id, Data *data)
                 --health;
             }
             // left & right edge
-            if (x == 1 || x == WINDOW_WIDTH - 2)
+            else if (vertical_collision)
             {
                 xDirection = -xDirection;
                 if (yDirection == 0)
