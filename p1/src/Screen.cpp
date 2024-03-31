@@ -20,7 +20,7 @@ void Screen::run(Data *data)
     {
         scr.updateScreen();
         refresh();
-        std::this_thread::sleep_for(std::chrono::milliseconds(REFRESH_RATE));
+        std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
         data->exit_flag = getch();
     }
     getch();

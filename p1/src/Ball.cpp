@@ -53,7 +53,7 @@ void Ball::run(uint8_t id, Data *data)
             else if (horizontal_collision)
             {
                 yDirection = -yDirection;
-                if (xDirection == 0)
+                if (!xDirection)
                 {
                     xDirection = rand() % 3 - 1;
                 }
@@ -63,7 +63,7 @@ void Ball::run(uint8_t id, Data *data)
             else if (vertical_collision)
             {
                 xDirection = -xDirection;
-                if (yDirection == 0)
+                if (!yDirection)
                 {
                     yDirection = rand() % 3 - 1;
                 }

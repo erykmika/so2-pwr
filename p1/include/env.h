@@ -16,7 +16,6 @@
 /* ncurses screen properties */
 #define WINDOW_WIDTH 90
 #define WINDOW_HEIGHT 40
-#define REFRESH_RATE 100 // ms
 
 #define TICK 100 // ms
 
@@ -32,7 +31,7 @@
 
 /* Start delay of individual balls */
 #define BALL_MIN_DELAY 1 // s
-#define BALL_MAX_DELAY 8 // s
+#define BALL_MAX_DELAY 5 // s
 #define MOD_DELAY BALL_MAX_DELAY + 1 - BALL_MIN_DELAY
 
 /* Gray area properties */
