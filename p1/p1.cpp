@@ -5,6 +5,9 @@
 
 int main()
 {
+    // Initialize random number generator
+    srand(time(NULL));
+    
     /* Data struct initialization */
     Data *data = new Data;
     for (auto i = 0; i < NUM_OF_BALLS; i++)

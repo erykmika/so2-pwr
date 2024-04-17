@@ -7,7 +7,7 @@ void Gray::run(Data *data)
         uint8_t &x = data->grayX;
         uint8_t &y = data->grayY;
 
-        x = WINDOW_WIDTH / 2;
+        x = rand()%(WINDOW_WIDTH - GRAY_WIDTH);
         y = WINDOW_HEIGHT - 3;
 
         // Gray area speed
