@@ -19,11 +19,9 @@ void Screen::run(Data *data)
     while (data->exit_flag != EXIT_KEY)
     {
         scr.updateScreen();
-        refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
         data->exit_flag = getch();
     }
-    getch();
     endwin();
 }
 
@@ -87,7 +85,6 @@ void Screen::updateScreen()
         }
     }
 
-    refresh();
 
     attron(COLOR_PAIR(2));
 
@@ -103,7 +100,6 @@ void Screen::updateScreen()
         }
     }
 
-    refresh();
 
     if (curData->grayAlive)
     {

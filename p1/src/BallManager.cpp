@@ -2,11 +2,13 @@
 
 void BallManager::run(Data *data)
 {
-    std::thread ballThreads[NUM_OF_BALLS];
+    std::vector<std::thread> ballThreads;
 
     for (auto i = 0; i < NUM_OF_BALLS; i++)
     {
-        ballThreads[i] = std::thread(Ball::run, i, data);
+        std::thread bt(Ball::run, i, data);
+        // WYKORZYSTANIE MOVE - BEZ KOPIOWANIA
+        ballThreads.push_back(move(bt));
     }
     for (auto i = 0; i < NUM_OF_BALLS; i++)
     {
