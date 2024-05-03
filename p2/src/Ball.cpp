@@ -1,0 +1,166 @@
+#include "Ball.h"
+
+/* Wait and then start the ball thread logic */
+void Ball::run(uint8_t id, Data *data)
+{
+    while (data->exit_flag != EXIT_KEY)
+    {
+        sleep(rand() % (MOD_DELAY) + BALL_MIN_DELAY);
+
+        short health = BALL_HEALTH;
+        uint8_t delayLimit = rand() % (MOD_SPEED) + MAX_SPEED;
+
+        uint8_t &x = data->ballsX[id];
+        uint8_t &y = data->ballsY[id];
+
+        short yDirection = -1;
+        short xDirection = 0; // <-1, 1>
+
+        // Ball enters the board
+        x = 25;
+        y = SPAWN_Y;
+
+        // From now on the ball can be drawn on screen
+        data->ballsAlive[id] = true;
+
+        for (auto i = 0; i < delayLimit; i++)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
+        }
+
+        // Proper order must be kept, the gray area first, then the ball
+        x += xDirection;
+        y += yDirection;
+
+        while (health && data->exit_flag != EXIT_KEY)
+        {
+            for (auto i = 0; i < delayLimit; i++)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
+            }
+
+            uint8_t &grayX = data->grayX;
+            uint8_t &grayY = data->grayY;
+
+            bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
+            bool vertical_collision = (x == 1 || x == WINDOW_WIDTH - 2);
+
+            // corner collision
+            if ((horizontal_collision && vertical_collision))
+            {
+                xDirection = -xDirection;
+                yDirection = -yDirection;
+            }
+
+            // upper & bottom edge
+            else if (horizontal_collision)
+            {
+                yDirection = -yDirection;
+                if (!xDirection)
+                {
+                    xDirection = rand() % 3 - 1;
+                }
+                --health;
+            }
+            // left & right edge
+            else if (vertical_collision)
+            {
+                xDirection = -xDirection;
+                if (!yDirection)
+                {
+                    yDirection = rand() % 3 - 1;
+                }
+                --health;
+            }
+
+            else if (vertical_collision || horizontal_collision)
+            {
+                yDirection = yDirection ? (yDirection / abs(yDirection)) : yDirection;
+            }
+            // Check if the ball collides with the gray area
+            if (x >= grayX - 1 && x <= grayX + 1 && y >= grayY - 5 && y <= grayY + GRAY_HEIGHT + 4)
+            {
+                std::unique_lock<std::mutex> lock(data->x_mutex[id]);
+                data->cv_ball_gray_collision.wait(lock, [&data]()
+                                                  { return data->gray_moved; });
+
+                bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
+                bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
+                if (gray_horizontal_collision)
+                {
+                    yDirection = -yDirection;
+                    if (!xDirection)
+                    {
+                        xDirection = rand() % 3 - 1;
+                    }
+                    --health;
+                }
+                else if (gray_vertical_collision)
+                {
+                    xDirection = -xDirection;
+                    if (!yDirection)
+                    {
+                        yDirection = rand() % 3 - 1;
+                    }
+                    --health;
+                }
+                x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
+                if (gray_horizontal_collision)
+                {
+                    y = std::min(std::max(1, y + 2 * yDirection), WINDOW_HEIGHT - 2);
+                }
+                else
+                {
+                    y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+                }
+                lock.unlock();
+            }
+            else
+            {
+                bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
+                bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
+                if (gray_horizontal_collision)
+                {
+                    yDirection = -yDirection;
+                    if (!xDirection)
+                    {
+                        xDirection = rand() % 3 - 1;
+                    }
+                    --health;
+                }
+                else if (gray_vertical_collision)
+                {
+                    xDirection = -xDirection;
+                    if (!yDirection)
+                    {
+                        yDirection = rand() % 3 - 1;
+                    }
+                    --health;
+                }
+                x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
+                y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+            }
+        }
+        data->ballsAlive[id] = false;
+    }
+}
+
+bool Ball::checkGrayHorizontalCollision(uint8_t id, Data *data)
+{
+    short grayX = data->grayX;
+    short grayY = data->grayY;
+    short x = data->ballsX[id];
+    short y = data->ballsY[id];
+    return ((x == grayX || x == grayX + GRAY_WIDTH - 1) &&
+            (y == grayY + 1 || y == grayY - GRAY_HEIGHT));
+}
+
+bool Ball::checkGrayVerticalCollision(uint8_t id, Data *data, short xDirection)
+{
+    short grayX = data->grayX;
+    short grayY = data->grayY;
+    short x = data->ballsX[id];
+    short y = data->ballsY[id];
+    return ((y <= grayY + 1 && y >= grayY - GRAY_HEIGHT) &&
+            ((x == grayX - 1 && xDirection > 0) || (x == grayX + 1 && xDirection < 0) || (x == grayX + GRAY_WIDTH && xDirection < 0) || (x == grayX + GRAY_WIDTH - 2 && xDirection > 0)));
+}
