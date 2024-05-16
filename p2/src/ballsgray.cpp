@@ -1,4 +1,55 @@
+#include "Gray.h"
 #include "Ball.h"
+
+bool gray_moved = false;
+
+void Gray::run(Data *data)
+{
+    while (data->exit_flag != EXIT_KEY)
+    {
+        uint8_t &x = data->grayX;
+        uint8_t &y = data->grayY;
+
+        x = 25;
+        y = WINDOW_HEIGHT - 10;
+
+        // Gray area speed
+        short speed = INITIAL_GRAY_SPEED;
+
+        data->grayAlive = true;
+
+        short yDirection = -1;
+
+        // Mutexes specific to particular balls
+        // Balls wait for the gray area to move unless any ball touches the gray area - then wait
+
+        while (data->exit_flag != EXIT_KEY)
+        {
+            // Bounce off horizontal edges, change speed to random value
+            if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
+            {
+                yDirection = -yDirection;
+                speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
+            }
+
+            {
+                std::lock_guard lk(data->grayMutex);
+                y += yDirection; // Move the gray area
+                gray_moved = true;
+            }
+
+            data->cv.notify_all();
+
+            for (uint8_t i = 0; i < speed; i++)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
+            }
+
+            gray_moved = false;
+        }
+    }
+    data->grayAlive = false;
+}
 
 /* Wait and then start the ball thread logic */
 void Ball::run(uint8_t id, Data *data)
@@ -80,10 +131,9 @@ void Ball::run(uint8_t id, Data *data)
             // Check if the ball collides with the gray area
             if (x >= grayX - 1 && x <= grayX + 1 && y >= grayY - 5 && y <= grayY + GRAY_HEIGHT + 4)
             {
-                std::unique_lock<std::mutex> lock(data->x_mutex[id]);
-                data->cv_ball_gray_collision.wait(lock, [&data]()
-                                                  { return data->gray_moved; });
-
+                std::unique_lock lk(data->grayMutex);
+                data->cv.wait(lk, []
+                              { return gray_moved; });
                 bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
                 bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
                 if (gray_horizontal_collision)
@@ -113,7 +163,8 @@ void Ball::run(uint8_t id, Data *data)
                 {
                     y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
                 }
-                lock.unlock();
+                lk.unlock();
+                data->cv.notify_one();
             }
             else
             {

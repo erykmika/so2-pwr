@@ -18,7 +18,6 @@ int main()
         data->ballsX[i] = 0;
         data->ballsY[i] = 0;
         data->ballsAlive.push_back(false);
-        data->x_mutex.push_back(std::mutex());
     }
 
     data->exit_flag = ERR;

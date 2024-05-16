@@ -24,14 +24,12 @@ struct Data
     bool grayAlive;
     /** Exit key flag */
     int exit_flag;
-    /** Gray x mutex */
-    std::vector<std::mutex> x_mutex;
-    /** Condition variable for signaling ball-gray area collisions */
-    std::condition_variable cv_ball_gray_collision;
-    /** Mutex for protecting shared data */
-    std::mutex data_mutex;
     /** If the gray area has moved */
     bool gray_moved;
+    /** Ball mutexes */
+    std::mutex grayMutex;
+    /** Condition variable */
+    std::condition_variable cv;
 };
 
 #endif
