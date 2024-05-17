@@ -25,6 +25,7 @@ int main()
     data->grayY = 0;
     data->grayAlive = false;
     data->gray_moved = false;
+    data->is_touching = 0x0000;
 
     // Spawn threads
     std::thread ballManagerThr(BallManager::run, data);
