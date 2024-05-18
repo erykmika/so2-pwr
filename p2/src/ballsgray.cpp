@@ -26,16 +26,9 @@ void Gray::run(Data *data)
 
         while (data->exit_flag != EXIT_KEY)
         {
-            // Bounce off horizontal edges, change speed to random value
-            if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
+            while (touching_detected)
             {
-                yDirection = -yDirection;
-                speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
-            }
-
-            if (touching_detected)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(GRAY_TOUCH_HOLD));
+                std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
                 touching_detected = false;
             }
 
@@ -49,6 +42,12 @@ void Gray::run(Data *data)
 
                 if (!touching_detected)
                 {
+                    // Bounce off horizontal edges, change speed to random value
+                    if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
+                    {
+                        yDirection = -yDirection;
+                        speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
+                    }
                     y += yDirection; // Move the gray area
                 }
 
@@ -114,7 +113,9 @@ void Ball::run(uint8_t id, Data *data)
             uint8_t &grayY = data->grayY;
 
             // Check if the ball collides with the gray area - gray surroundings are checked only
-            if (x >= grayX - 1 && x <= grayX + GRAY_WIDTH && y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1)
+            if (((x >= grayX - 2 && x <= grayX + 2) ||
+                 (x >= grayX + GRAY_WIDTH - 3 && x <= grayX + GRAY_WIDTH + 2)) &&
+                (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
             {
                 {
                     std::unique_lock lk(data->grayMutex);
