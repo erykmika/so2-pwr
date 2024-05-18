@@ -41,6 +41,7 @@
 #define MIN_GRAY_SPEED 1     // Min gray area ticks (ticks/move)
 #define MAX_GRAY_SPEED 1     // Max gray area ticks (ticks/move)
 #define MOD_GRAY_SPEED MIN_GRAY_SPEED + 1 - MAX_GRAY_SPEED
+#define GRAY_TOUCH_HOLD 150
 
 /** Exit key */
 #define EXIT_KEY ' '
