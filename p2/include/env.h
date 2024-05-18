@@ -38,8 +38,8 @@
 #define GRAY_WIDTH 10
 #define GRAY_HEIGHT 10
 #define INITIAL_GRAY_SPEED 1 // Gray area speed (ticks per move)
-#define MIN_GRAY_SPEED 1     // Min gray area ticks (ticks/move)
-#define MAX_GRAY_SPEED 1     // Max gray area ticks (ticks/move)
+#define MIN_GRAY_SPEED 3     // Min gray area ticks (ticks/move)
+#define MAX_GRAY_SPEED 2     // Max gray area ticks (ticks/move)
 #define MOD_GRAY_SPEED MIN_GRAY_SPEED + 1 - MAX_GRAY_SPEED
 #define GRAY_TOUCH_HOLD TICK / 4
 

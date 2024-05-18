@@ -28,7 +28,7 @@ void Gray::run(Data *data)
         {
             while (touching_detected)
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 touching_detected = false;
             }
 
@@ -52,7 +52,6 @@ void Gray::run(Data *data)
                 }
 
                 gray_moved = true;
-                data->cv.notify_all();
 
                 if (touching_detected)
                 {
@@ -73,15 +72,18 @@ void Gray::run(Data *data)
 /* Wait and then start the ball thread logic */
 void Ball::run(uint8_t id, Data *data)
 {
+    uint8_t &x = data->ballsX[id];
+    uint8_t &y = data->ballsY[id];
+
+    uint8_t &grayX = data->grayX;
+    uint8_t &grayY = data->grayY;
+
     while (data->exit_flag != EXIT_KEY)
     {
         sleep(rand() % (MOD_DELAY) + BALL_MIN_DELAY);
 
         short health = BALL_HEALTH;
         uint8_t delayLimit = rand() % (MOD_SPEED) + MAX_SPEED;
-
-        uint8_t &x = data->ballsX[id];
-        uint8_t &y = data->ballsY[id];
 
         short yDirection = -1;
         short xDirection = 0; // <-1, 1>
@@ -95,7 +97,7 @@ void Ball::run(uint8_t id, Data *data)
 
         for (auto i = 0; i < delayLimit; i++)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
+            std::this_thread::sleep_for(std::chrono::milliseconds(GRAY_TOUCH_HOLD));
         }
 
         // Proper order must be kept, the gray area first, then the ball
@@ -104,23 +106,14 @@ void Ball::run(uint8_t id, Data *data)
 
         while (health && data->exit_flag != EXIT_KEY)
         {
-            for (auto i = 0; i < delayLimit; i++)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
-            }
-
-            uint8_t &grayX = data->grayX;
-            uint8_t &grayY = data->grayY;
 
             // Check if the ball collides with the gray area - gray surroundings are checked only
             if (((x >= grayX - 2 && x <= grayX + 2) ||
                  (x >= grayX + GRAY_WIDTH - 3 && x <= grayX + GRAY_WIDTH + 2)) &&
-                (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
+                (y <= grayY + 3 && y >= grayY - GRAY_HEIGHT - 2))
             {
                 {
                     std::unique_lock lk(data->grayMutex);
-                    data->cv.wait(lk, []
-                                  { return gray_moved; });
 
                     bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
                     bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
@@ -147,23 +140,27 @@ void Ball::run(uint8_t id, Data *data)
 
                     x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
 
-                    if (gray_horizontal_collision)
+                    if ((x == grayX || x == grayX + GRAY_WIDTH - 1) && (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
                     {
                         data->is_touching |= ((uint16_t)0x1 << id);
-                        y = std::min(std::max(1, y + 3 * yDirection), WINDOW_HEIGHT - 2);
-                    }
-                    else if (gray_vertical_collision)
-                    {
-                        data->is_touching &= ~((uint16_t)0x1 << id); // 0100 => FEFF
-                        y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+                        if ((WINDOW_HEIGHT)-y <= 4 || y <= 3)
+                        {
+                            x += 3;
+                        }
                     }
                     else
                     {
                         data->is_touching &= ~((uint16_t)0x1 << id); // 0100 => FEFF
-                        y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
                     }
 
-                    data->cv.notify_all();
+                    if (gray_horizontal_collision)
+                    {
+                        y = std::min(std::max(1, y + 3 * yDirection), WINDOW_HEIGHT - 2);
+                    }
+                    else
+                    {
+                        y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+                    }
                 }
             }
             else
@@ -207,6 +204,11 @@ void Ball::run(uint8_t id, Data *data)
                 }
                 x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
                 y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+            }
+            // Ball movement delay
+            for (auto i = 0; i < delayLimit; i++)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
         }
         data->ballsAlive[id] = false;
