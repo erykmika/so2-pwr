@@ -86,10 +86,10 @@ void Ball::run(uint8_t id, Data *data)
         uint8_t delayLimit = rand() % (MOD_SPEED) + MAX_SPEED;
 
         short yDirection = -1;
-        short xDirection = 0; // <-1, 1>
+        short xDirection = rand() % 3 - 1; // <-1, 1>
 
         // Ball enters the board
-        x = 25;
+        x = (rand() % SPAWN_X_LEN) + LOW_X_SPAWN;
         y = SPAWN_Y;
 
         // From now on the ball can be drawn on screen
@@ -125,7 +125,11 @@ void Ball::run(uint8_t id, Data *data)
                         {
                             yDirection = rand() % 3 - 1;
                         }
-                        --health;
+                        // Drop health only if the ball is outside of the gray area
+                        if (x <= grayX - 1 || x >= grayX + GRAY_WIDTH)
+                        {
+                            --health;
+                        }
                     }
 
                     else if (gray_horizontal_collision)
