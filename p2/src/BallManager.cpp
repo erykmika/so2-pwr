@@ -7,7 +7,6 @@ void BallManager::run(Data *data)
     for (auto i = 0; i < NUM_OF_BALLS; i++)
     {
         std::thread bt(Ball::run, i, data);
-        // WYKORZYSTANIE MOVE - BEZ KOPIOWANIA
         ballThreads.push_back(move(bt));
     }
     for (auto i = 0; i < NUM_OF_BALLS; i++)

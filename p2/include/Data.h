@@ -28,8 +28,6 @@ struct Data
     bool gray_moved;
     /** Ball mutexes */
     std::mutex grayMutex;
-    /** Condition variable */
-    std::condition_variable cv;
     /** Is any ball touching the gray walls */
     uint16_t is_touching;
 };

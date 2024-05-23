@@ -1,8 +1,6 @@
 #include "Gray.h"
 #include "Ball.h"
 
-bool gray_moved = false;
-
 void Gray::run(Data *data)
 {
     while (data->exit_flag != EXIT_KEY)
@@ -20,7 +18,6 @@ void Gray::run(Data *data)
 
         short yDirection = -1;
 
-        // Mutexes specific to particular balls
         // Balls wait for the gray area to move unless any ball touches the gray area - then wait
         bool touching_detected = false;
 
@@ -51,8 +48,6 @@ void Gray::run(Data *data)
                     y += yDirection; // Move the gray area
                 }
 
-                gray_moved = true;
-
                 if (touching_detected)
                 {
                     continue;
@@ -62,8 +57,6 @@ void Gray::run(Data *data)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
-
-            gray_moved = false;
         }
     }
     data->grayAlive = false;
@@ -144,12 +137,17 @@ void Ball::run(uint8_t id, Data *data)
 
                     x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
 
-                    if ((x == grayX || x == grayX + GRAY_WIDTH - 1) && (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
+                    bool collision = gray_horizontal_collision || gray_vertical_collision;
+
+                    if ((((x >= grayX - 1 && x <= grayX + 1) ||
+                          (x >= grayX + GRAY_WIDTH - 2 && x <= grayX + GRAY_WIDTH)) &&
+                         (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1)) &&
+                        collision)
                     {
                         data->is_touching |= ((uint16_t)0x1 << id);
                         if ((WINDOW_HEIGHT)-y <= 4 || y <= 3)
                         {
-                            x += 3;
+                            x += 1 + ((rand() % 1) * -2);
                         }
                     }
                     else
