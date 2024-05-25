@@ -99,17 +99,17 @@ void Ball::run(uint8_t id, Data *data)
 
         while (health && data->exit_flag != EXIT_KEY)
         {
-
             // Check if the ball collides with the gray area - gray surroundings are checked only
-            if (((x >= grayX - 2 && x <= grayX + 2) ||
-                 (x >= grayX + GRAY_WIDTH - 3 && x <= grayX + GRAY_WIDTH + 2)) &&
-                (y <= grayY + 3 && y >= grayY - GRAY_HEIGHT - 2))
+            bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
+            bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
+
+            if (gray_horizontal_collision || gray_vertical_collision)
             {
                 {
                     std::unique_lock lk(data->grayMutex);
 
-                    bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
-                    bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
+                    gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
+                    gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
 
                     if (gray_vertical_collision)
                     {
