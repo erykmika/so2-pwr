@@ -23,18 +23,16 @@ void Gray::run(Data *data)
 
         while (data->exit_flag != EXIT_KEY)
         {
-            while (touching_detected)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                touching_detected = false;
-            }
-
             {
                 std::lock_guard lk(data->grayMutex);
 
                 if (data->is_touching)
                 {
                     touching_detected = true;
+                }
+                else
+                {
+                    touching_detected = false;
                 }
 
                 if (!touching_detected)
