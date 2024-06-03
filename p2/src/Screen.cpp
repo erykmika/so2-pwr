@@ -85,7 +85,6 @@ void Screen::updateScreen()
         }
     }
 
-
     attron(COLOR_PAIR(2));
 
     // Update gray area
@@ -98,13 +97,12 @@ void Screen::updateScreen()
         }
     }
 
-
     if (curData->grayAlive && oldGrayX)
     {
         for (uint8_t v = curData->grayY; v > curData->grayY - GRAY_HEIGHT; v--)
         {
-           mvwprintw(window, v, oldGrayX, "#");
-           mvwprintw(window, v, oldGrayX + GRAY_WIDTH - 1, "#");
+            mvwprintw(window, v, oldGrayX, "#");
+            mvwprintw(window, v, oldGrayX + GRAY_WIDTH - 1, "#");
         }
     }
 

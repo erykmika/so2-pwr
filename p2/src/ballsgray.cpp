@@ -139,8 +139,8 @@ void Ball::run(uint8_t id, Data *data)
 
                     if ((((x >= grayX - 1 && x <= grayX + 1) ||
                           (x >= grayX + GRAY_WIDTH - 2 && x <= grayX + GRAY_WIDTH)) &&
-                         (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1)) &&
-                        collision)
+                         ((y <= grayY + 2 && y >= grayY - 1) || (y >= grayY - GRAY_HEIGHT - 1 && y <= grayY - GRAY_HEIGHT + 2)) &&
+                         collision))
                     {
                         data->is_touching |= ((uint16_t)0x1 << id);
                         if ((WINDOW_HEIGHT)-y <= 4 || y <= 3)
@@ -150,7 +150,7 @@ void Ball::run(uint8_t id, Data *data)
                     }
                     else
                     {
-                        data->is_touching &= ~((uint16_t)0x1 << id); // 0100 => FEFF
+                        data->is_touching &= ~((uint16_t)0x1 << id);
                     }
 
                     if (gray_horizontal_collision)
@@ -165,7 +165,7 @@ void Ball::run(uint8_t id, Data *data)
             }
             else
             {
-                data->is_touching &= ~((uint16_t)0x1 << id); // 0100 => FEFF
+                data->is_touching &= ~((uint16_t)0x1 << id);
 
                 bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
                 bool vertical_collision = (x == 1 || x == WINDOW_WIDTH - 2);
@@ -212,6 +212,7 @@ void Ball::run(uint8_t id, Data *data)
             }
         }
         data->ballsAlive[id] = false;
+        data->is_touching &= ~((uint16_t)0x1 << id);
     }
 }
 
