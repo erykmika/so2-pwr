@@ -14,8 +14,8 @@
 #include <chrono>
 
 /* ncurses screen properties */
-#define WINDOW_WIDTH 60
-#define WINDOW_HEIGHT 30
+#define WINDOW_WIDTH 90
+#define WINDOW_HEIGHT 40
 
 #define TICK 200 // ms
 
@@ -25,7 +25,7 @@
 #define SPAWN_X_LEN 20
 #define LOW_X_SPAWN (WINDOW_WIDTH / 2) - (SPAWN_X_LEN / 2)
 #define SPAWN_Y (WINDOW_HEIGHT - 2) // y value of balls spawn point
-#define MIN_SPEED 1                 // Min ball ticks (ticks/move)
+#define MIN_SPEED 2                 // Min ball ticks (ticks/move)
 #define MAX_SPEED 1                 // Max ball ticks (ticks/move)
 #define MOD_SPEED MIN_SPEED + 1 - MAX_SPEED
 
@@ -35,11 +35,11 @@
 #define MOD_DELAY BALL_MAX_DELAY + 1 - BALL_MIN_DELAY
 
 /* Gray area properties */
-#define GRAY_WIDTH 10
-#define GRAY_HEIGHT 10
+#define GRAY_WIDTH 20
+#define GRAY_HEIGHT 15
 #define INITIAL_GRAY_SPEED 1 // Gray area speed (ticks per move)
 #define MIN_GRAY_SPEED 3     // Min gray area ticks (ticks/move)
-#define MAX_GRAY_SPEED 2     // Max gray area ticks (ticks/move)
+#define MAX_GRAY_SPEED 1     // Max gray area ticks (ticks/move)
 #define MOD_GRAY_SPEED MIN_GRAY_SPEED + 1 - MAX_GRAY_SPEED
 #define GRAY_TOUCH_HOLD TICK / 4
 

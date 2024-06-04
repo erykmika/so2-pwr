@@ -26,18 +26,16 @@ void Gray::run(Data *data)
 
         while (data->exit_flag != EXIT_KEY)
         {
-            while (touching_detected)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                touching_detected = false;
-            }
-
             {
                 std::lock_guard lk(data->grayMutex);
 
                 if (data->is_touching)
                 {
                     touching_detected = true;
+                }
+                else
+                {
+                    touching_detected = false;
                 }
 
                 if (!touching_detected)
@@ -86,10 +84,10 @@ void Ball::run(uint8_t id, Data *data)
         uint8_t delayLimit = rand() % (MOD_SPEED) + MAX_SPEED;
 
         short yDirection = -1;
-        short xDirection = 0; // <-1, 1>
+        short xDirection = rand() % 3 - 1; // <-1, 1>
 
         // Ball enters the board
-        x = 25;
+        x = (rand() % SPAWN_X_LEN) + LOW_X_SPAWN;
         y = SPAWN_Y;
 
         // From now on the ball can be drawn on screen
@@ -108,9 +106,9 @@ void Ball::run(uint8_t id, Data *data)
         {
 
             // Check if the ball collides with the gray area - gray surroundings are checked only
-            if (((x >= grayX - 2 && x <= grayX + 2) ||
-                 (x >= grayX + GRAY_WIDTH - 3 && x <= grayX + GRAY_WIDTH + 2)) &&
-                (y <= grayY + 3 && y >= grayY - GRAY_HEIGHT - 2))
+            if (((x >= grayX - 1 && x <= grayX + 1) ||
+                 (x >= grayX + GRAY_WIDTH - 2 && x <= grayX + GRAY_WIDTH)) &&
+                (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
             {
                 {
                     std::unique_lock lk(data->grayMutex);
@@ -125,7 +123,11 @@ void Ball::run(uint8_t id, Data *data)
                         {
                             yDirection = rand() % 3 - 1;
                         }
-                        --health;
+                        // Drop health only if the ball is outside of the gray area
+                        if (x <= grayX - 1 || x >= grayX + GRAY_WIDTH)
+                        {
+                            --health;
+                        }
                     }
 
                     else if (gray_horizontal_collision)
@@ -150,7 +152,7 @@ void Ball::run(uint8_t id, Data *data)
                     }
                     else
                     {
-                        data->is_touching &= ~((uint16_t)0x1 << id); // 0100 => FEFF
+                        data->is_touching &= ~((uint16_t)0x1 << id);
                     }
 
                     if (gray_horizontal_collision)
@@ -165,7 +167,7 @@ void Ball::run(uint8_t id, Data *data)
             }
             else
             {
-                data->is_touching &= ~((uint16_t)0x1 << id); // 0100 => FEFF
+                data->is_touching &= ~((uint16_t)0x1 << id);
 
                 bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
                 bool vertical_collision = (x == 1 || x == WINDOW_WIDTH - 2);
@@ -211,6 +213,7 @@ void Ball::run(uint8_t id, Data *data)
                 std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
         }
+        data->is_touching &= ~((uint16_t)0x1 << id);
         data->ballsAlive[id] = false;
     }
 }
