@@ -1,8 +1,6 @@
 #include "Gray.h"
 #include "Ball.h"
 
-bool gray_moved = false;
-
 void Gray::run(Data *data)
 {
     while (data->exit_flag != EXIT_KEY)
@@ -20,10 +18,6 @@ void Gray::run(Data *data)
 
         short yDirection = -1;
 
-        // Mutexes specific to particular balls
-        // Balls wait for the gray area to move unless any ball touches the gray area - then wait
-        bool touching_detected = false;
-
         while (data->exit_flag != EXIT_KEY)
         {
             {
@@ -31,37 +25,21 @@ void Gray::run(Data *data)
 
                 if (data->is_touching)
                 {
-                    touching_detected = true;
-                }
-                else
-                {
-                    touching_detected = false;
-                }
-
-                if (!touching_detected)
-                {
-                    // Bounce off horizontal edges, change speed to random value
-                    if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
-                    {
-                        yDirection = -yDirection;
-                        speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
-                    }
-                    y += yDirection; // Move the gray area
-                }
-
-                gray_moved = true;
-
-                if (touching_detected)
-                {
                     continue;
                 }
+
+                // Bounce off horizontal edges, change speed to random value
+                if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
+                {
+                    yDirection = -yDirection;
+                    speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
+                }
+                y += yDirection; // Move the gray area
             }
             for (uint8_t i = 0; i < speed; i++)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
-
-            gray_moved = false;
         }
     }
     data->grayAlive = false;
