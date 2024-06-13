@@ -1,4 +1,10 @@
+
 /* Eryk Mika 264451 */
+
+/*
+Rozważamy pionowe krawędzie szarego obszaru. Kulki odbijają się od zewnętrznych stron tych krawędzi - podobnie jak od krawędzi boiska.
+Jeżeli kulka wpadnie do wnętrza szarego obszaru, odbija się w tym wnętrzu między pionowymi krawędziami aż do opuszczenia szarego obszaru.
+*/
 
 #include "env.h"
 #include "Screen.h"

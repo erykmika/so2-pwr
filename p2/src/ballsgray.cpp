@@ -73,7 +73,7 @@ void Ball::run(uint8_t id, Data *data)
 
         for (auto i = 0; i < delayLimit; i++)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(GRAY_TOUCH_HOLD));
+            std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
         }
 
         // Proper order must be kept, the gray area first, then the ball
