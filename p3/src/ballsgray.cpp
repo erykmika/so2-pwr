@@ -131,8 +131,6 @@ void Ball::run(uint8_t id, Data *data)
                         --health;
                     }
 
-                    x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
-
                     if ((x == grayX || x == grayX + GRAY_WIDTH - 1) && (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
                     {
                         data->is_touching |= ((uint16_t)0x1 << id);
@@ -145,6 +143,16 @@ void Ball::run(uint8_t id, Data *data)
                     {
                         data->is_touching &= ~((uint16_t)0x1 << id);
                     }
+
+                    if (x > grayX && x < grayX + GRAY_WIDTH - 1 && (y == 1 || y == WINDOW_HEIGHT - 2))
+                    {
+
+                        yDirection = (y - 1) ? -1 : 1;
+                        y += (5 + (-10 * ((y - 1) ? 1 : 0)));
+                        xDirection = 0;
+                    }
+
+                    x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
 
                     if (gray_horizontal_collision)
                     {
@@ -159,6 +167,7 @@ void Ball::run(uint8_t id, Data *data)
             else
             {
                 is_near &= ~((uint16_t)0x1 << id);
+                is_inside &= ~((uint16_t)0x1 << id);
                 data->is_touching &= ~((uint16_t)0x1 << id);
 
                 bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
@@ -206,6 +215,8 @@ void Ball::run(uint8_t id, Data *data)
                 std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
         }
+        is_inside &= ~((uint16_t)0x1 << id);
+        is_near &= ~((uint16_t)0x1 << id);
         data->is_touching &= ~((uint16_t)0x1 << id);
         data->ballsAlive[id] = false;
     }
@@ -245,7 +256,5 @@ void Ball::checkIfInsideGray(uint8_t id, Data *data)
         is_inside |= ((uint16_t)0x1 << id);
     }
     else
-    {
         is_inside &= ~((uint16_t)0x1 << id);
-    }
 }
