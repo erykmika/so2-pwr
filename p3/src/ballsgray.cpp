@@ -1,8 +1,13 @@
 #include "Gray.h"
 #include "Ball.h"
+#include <condition_variable>
 
 /** Is ball inside of the gray area */
-uint16_t is_inside;
+uint16_t is_inside = 0x0;
+/** Is ball near the gray area */
+uint16_t is_near = 0x0;
+/** Condition variable  */
+std::condition_variable cv;
 
 void Gray::run(Data *data)
 {
@@ -24,30 +29,20 @@ void Gray::run(Data *data)
         while (data->exit_flag != EXIT_KEY)
         {
             {
-                std::lock_guard lk(data->grayMutex);
-                // std::unique_lock lk_inner(data->innerMutex);
-                // data->cv.wait(lk_inner, []
-                //               { return !is_inside; });
+                std::unique_lock lk(data->grayMutex);
 
-                if (data->is_touching)
+                if (is_near)
+                    cv.wait(lk, []
+                            { return !is_inside; });
+
+                // Bounce off horizontal edges, change speed to random value
+                if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
                 {
-                    continue;
+                    yDirection = -yDirection;
+                    speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
                 }
 
-                if (!is_inside)
-                {
-                    // Bounce off horizontal edges, change speed to random value
-                    if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
-                    {
-                        yDirection = -yDirection;
-                        speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
-                    }
-
-                    y += yDirection; // Move the gray area
-                }
-                // lk.unlock();
-                // lk_inner.unlock();
-                // data->cv.notify_one();
+                y += yDirection; // Move the gray area
             }
             for (uint8_t i = 0; i < speed; i++)
             {
@@ -97,12 +92,17 @@ void Ball::run(uint8_t id, Data *data)
         {
 
             // Check if the ball collides with the gray area - gray surroundings are checked only
-            if (((x >= grayX - 1 && x <= grayX + 1) ||
-                 (x >= grayX + GRAY_WIDTH - 2 && x <= grayX + GRAY_WIDTH)) &&
+            if ((x >= grayX - 1 && x <= grayX + GRAY_WIDTH) &&
                 (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
             {
                 {
                     std::unique_lock lk(data->grayMutex);
+
+                    is_near |= ((uint16_t)0x1 << id);
+
+                    // Check if ball is inside of gray area
+                    checkIfInsideGray(id, data);
+                    cv.notify_one();
 
                     bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
                     bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
@@ -158,6 +158,7 @@ void Ball::run(uint8_t id, Data *data)
             }
             else
             {
+                is_near &= ~((uint16_t)0x1 << id);
                 data->is_touching &= ~((uint16_t)0x1 << id);
 
                 bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
@@ -198,10 +199,6 @@ void Ball::run(uint8_t id, Data *data)
                 x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
                 y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
             }
-
-            // Check if ball is inside of gray area
-            checkIfInsideGray(id, data);
-            // data->cv.notify_one();
 
             // Ball movement delay
             for (auto i = 0; i < delayLimit; i++)
