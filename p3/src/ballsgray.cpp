@@ -104,109 +104,17 @@ void Ball::run(uint8_t id, Data *data)
                     checkIfInsideGray(id, data);
                     cv.notify_one();
 
-                    bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
-                    bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
-
-                    if (gray_vertical_collision)
-                    {
-                        xDirection = -xDirection;
-                        if (!yDirection)
-                        {
-                            yDirection = rand() % 3 - 1;
-                        }
-                        // Drop health only if the ball is outside of the gray area
-                        if (x <= grayX - 1 || x >= grayX + GRAY_WIDTH)
-                        {
-                            --health;
-                        }
-                    }
-
-                    else if (gray_horizontal_collision)
-                    {
-                        yDirection = -yDirection;
-                        if (!xDirection)
-                        {
-                            xDirection = rand() % 3 - 1;
-                        }
-                        --health;
-                    }
-
-                    if ((x == grayX || x == grayX + GRAY_WIDTH - 1) && (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
-                    {
-                        data->is_touching |= ((uint16_t)0x1 << id);
-                        if ((WINDOW_HEIGHT)-y <= 4 || y <= 3)
-                        {
-                            x += 3;
-                        }
-                    }
-                    else
-                    {
-                        data->is_touching &= ~((uint16_t)0x1 << id);
-                    }
-
-                    if (x > grayX && x < grayX + GRAY_WIDTH - 1 && (y == 1 || y == WINDOW_HEIGHT - 2))
-                    {
-
-                        yDirection = (y - 1) ? -1 : 1;
-                        y += (5 + (-10 * ((y - 1) ? 1 : 0)));
-                        xDirection = 0;
-                    }
-
-                    x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
-
-                    if (gray_horizontal_collision)
-                    {
-                        y = std::min(std::max(1, y + 3 * yDirection), WINDOW_HEIGHT - 2);
-                    }
-                    else
-                    {
-                        y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
-                    }
+                    handleGrayCollisions(id, data, xDirection, yDirection, health);
                 }
             }
             else
             {
                 is_near &= ~((uint16_t)0x1 << id);
                 is_inside &= ~((uint16_t)0x1 << id);
+                cv.notify_one();
                 data->is_touching &= ~((uint16_t)0x1 << id);
 
-                bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
-                bool vertical_collision = (x == 1 || x == WINDOW_WIDTH - 2);
-
-                // corner collision
-                if ((horizontal_collision && vertical_collision))
-                {
-                    xDirection = -xDirection;
-                    yDirection = -yDirection;
-                }
-
-                // upper & bottom edge
-                else if (horizontal_collision)
-                {
-                    yDirection = -yDirection;
-                    if (!xDirection)
-                    {
-                        xDirection = rand() % 3 - 1;
-                    }
-                    --health;
-                }
-                // left & right edge
-                else if (vertical_collision)
-                {
-                    xDirection = -xDirection;
-                    if (!yDirection)
-                    {
-                        yDirection = rand() % 3 - 1;
-                    }
-                    --health;
-                }
-
-                else if (vertical_collision || horizontal_collision)
-                {
-                    yDirection = yDirection ? (yDirection / abs(yDirection)) : yDirection;
-                }
-                x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
-                y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+                handleWallCollisions(id, data, xDirection, yDirection, health);
             }
 
             // Ball movement delay
@@ -219,6 +127,7 @@ void Ball::run(uint8_t id, Data *data)
         is_near &= ~((uint16_t)0x1 << id);
         data->is_touching &= ~((uint16_t)0x1 << id);
         data->ballsAlive[id] = false;
+        cv.notify_one();
     }
 }
 
@@ -257,4 +166,115 @@ void Ball::checkIfInsideGray(uint8_t id, Data *data)
     }
     else
         is_inside &= ~((uint16_t)0x1 << id);
+}
+
+void Ball::handleWallCollisions(uint8_t &id, Data *data, short &xDirection, short &yDirection, short &health)
+{
+    uint8_t &x = data->ballsX[id];
+    uint8_t &y = data->ballsY[id];
+
+    bool horizontal_collision = (y == 1 || y == WINDOW_HEIGHT - 2);
+    bool vertical_collision = (x == 1 || x == WINDOW_WIDTH - 2);
+
+    // corner collision
+    if ((horizontal_collision && vertical_collision))
+    {
+        xDirection = -xDirection;
+        yDirection = -yDirection;
+    }
+
+    // upper & bottom edge
+    else if (horizontal_collision)
+    {
+        yDirection = -yDirection;
+        if (!xDirection)
+        {
+            xDirection = rand() % 3 - 1;
+        }
+        --health;
+    }
+    // left & right edge
+    else if (vertical_collision)
+    {
+        xDirection = -xDirection;
+        if (!yDirection)
+        {
+            yDirection = rand() % 3 - 1;
+        }
+        --health;
+    }
+
+    else if (vertical_collision || horizontal_collision)
+    {
+        yDirection = yDirection ? (yDirection / abs(yDirection)) : yDirection;
+    }
+    x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
+    y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+}
+
+void Ball::handleGrayCollisions(uint8_t &id, Data *data, short &xDirection, short &yDirection, short &health)
+{
+
+    uint8_t &x = data->ballsX[id];
+    uint8_t &y = data->ballsY[id];
+    uint8_t &grayX = data->grayX;
+    uint8_t &grayY = data->grayY;
+
+    bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
+    bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
+
+    if (gray_vertical_collision)
+    {
+        xDirection = -xDirection;
+        if (!yDirection)
+        {
+            yDirection = rand() % 3 - 1;
+        }
+        // Drop health only if the ball is outside of the gray area
+        if (x <= grayX - 1 || x >= grayX + GRAY_WIDTH)
+        {
+            --health;
+        }
+    }
+
+    else if (gray_horizontal_collision)
+    {
+        yDirection = -yDirection;
+        if (!xDirection)
+        {
+            xDirection = rand() % 3 - 1;
+        }
+        --health;
+    }
+    if ((x == grayX || x == grayX + GRAY_WIDTH - 1) && (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
+    {
+        data->is_touching |= ((uint16_t)0x1 << id);
+        if ((WINDOW_HEIGHT)-y <= 4 || y <= 3)
+        {
+            x += 3;
+        }
+    }
+    else
+    {
+        data->is_touching &= ~((uint16_t)0x1 << id);
+    }
+
+    if (x > grayX && x < grayX + GRAY_WIDTH - 1 && (y == 1 || y == WINDOW_HEIGHT - 2))
+    {
+
+        yDirection = (y - 1) ? -1 : 1;
+        y += (5 + (-10 * ((y - 1) ? 1 : 0)));
+        xDirection = 0;
+    }
+
+    x = std::min(std::max(1, x + xDirection), WINDOW_WIDTH - 2);
+
+    if (gray_horizontal_collision)
+    {
+        y = std::min(std::max(1, y + 3 * yDirection), WINDOW_HEIGHT - 2);
+    }
+    else
+    {
+        y = std::min(std::max(1, y + yDirection), WINDOW_HEIGHT - 2);
+    }
 }
