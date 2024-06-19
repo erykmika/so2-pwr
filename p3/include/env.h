@@ -17,7 +17,7 @@
 #define WINDOW_WIDTH 70
 #define WINDOW_HEIGHT 30
 
-#define TICK 100 // ms
+#define TICK 200 // ms
 
 /* Ball properties */
 #define NUM_OF_BALLS 10 // Maximum number of balls on the screen
