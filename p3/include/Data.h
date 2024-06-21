@@ -29,8 +29,6 @@ struct Data
     /** Ball mutexes */
     std::mutex grayMutex;
     std::mutex innerMutex;
-    /** Is any ball touching the gray walls */
-    uint16_t is_touching;
     /** Is inside condition variable */
     std::condition_variable cv;
 };

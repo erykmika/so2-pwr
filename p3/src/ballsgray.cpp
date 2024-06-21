@@ -8,6 +8,8 @@ uint16_t is_inside = 0x0;
 uint16_t is_near = 0x0;
 /** Condition variable  */
 std::condition_variable cv;
+/** Is any ball touching the gray walls */
+uint16_t is_touching;
 
 void Gray::run(Data *data)
 {
@@ -33,7 +35,7 @@ void Gray::run(Data *data)
 
                 if (is_near)
                     cv.wait(lk, []
-                            { return !is_inside; });
+                            { return !is_inside && !is_touching; });
 
                 // Bounce off horizontal edges, change speed to random value
                 if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
@@ -73,7 +75,7 @@ void Ball::run(uint8_t id, Data *data)
         short xDirection = rand() % 3 - 1; // <-1, 1>
 
         // Ball enters the board
-        x = (rand() % SPAWN_X_LEN) + LOW_X_SPAWN;
+        x = grayX;
         y = SPAWN_Y;
 
         // From now on the ball can be drawn on screen
@@ -93,7 +95,7 @@ void Ball::run(uint8_t id, Data *data)
 
             // Check if the ball collides with the gray area - gray surroundings are checked only
             if ((x >= grayX - 1 && x <= grayX + GRAY_WIDTH) &&
-                (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
+                (y <= grayY + 3 && y >= grayY - GRAY_HEIGHT - 2))
             {
                 {
                     std::unique_lock lk(data->grayMutex);
@@ -112,7 +114,7 @@ void Ball::run(uint8_t id, Data *data)
                 is_near &= ~((uint16_t)0x1 << id);
                 is_inside &= ~((uint16_t)0x1 << id);
                 cv.notify_one();
-                data->is_touching &= ~((uint16_t)0x1 << id);
+                is_touching &= ~((uint16_t)0x1 << id);
 
                 handleWallCollisions(id, data, xDirection, yDirection, health);
             }
@@ -125,9 +127,9 @@ void Ball::run(uint8_t id, Data *data)
         }
         is_inside &= ~((uint16_t)0x1 << id);
         is_near &= ~((uint16_t)0x1 << id);
-        data->is_touching &= ~((uint16_t)0x1 << id);
-        data->ballsAlive[id] = false;
         cv.notify_one();
+        is_touching &= ~((uint16_t)0x1 << id);
+        data->ballsAlive[id] = false;
     }
 }
 
@@ -246,9 +248,11 @@ void Ball::handleGrayCollisions(uint8_t &id, Data *data, short &xDirection, shor
         }
         --health;
     }
-    if ((x == grayX || x == grayX + GRAY_WIDTH - 1) && (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
+    if (((x >= grayX - 1 && x <= grayX + 1) ||
+         (x >= grayX + GRAY_WIDTH - 2 && x <= grayX + GRAY_WIDTH)) &&
+        (y <= grayY + 4 && y >= grayY - GRAY_HEIGHT - 3))
     {
-        data->is_touching |= ((uint16_t)0x1 << id);
+        is_touching |= ((uint16_t)0x1 << id);
         if ((WINDOW_HEIGHT)-y <= 4 || y <= 3)
         {
             x += 3;
@@ -256,14 +260,13 @@ void Ball::handleGrayCollisions(uint8_t &id, Data *data, short &xDirection, shor
     }
     else
     {
-        data->is_touching &= ~((uint16_t)0x1 << id);
+        is_touching &= ~((uint16_t)0x1 << id);
     }
 
     if (x > grayX && x < grayX + GRAY_WIDTH - 1 && (y == 1 || y == WINDOW_HEIGHT - 2))
     {
 
         yDirection = (y - 1) ? -1 : 1;
-        y += (5 + (-10 * ((y - 1) ? 1 : 0)));
         xDirection = 0;
     }
 
