@@ -9,7 +9,7 @@ uint16_t is_near = 0x0;
 /** Condition variable  */
 std::condition_variable cv;
 /** Is any ball touching the gray walls */
-uint16_t is_touching;
+uint16_t is_touching = 0x0;
 
 void Gray::run(Data *data)
 {
@@ -33,9 +33,8 @@ void Gray::run(Data *data)
             {
                 std::unique_lock lk(data->grayMutex);
 
-                if (is_near)
-                    cv.wait(lk, []
-                            { return !is_inside && !is_touching; });
+                cv.wait(lk, []
+                        { return (is_near && !is_inside && !is_touching) || !is_near; });
 
                 // Bounce off horizontal edges, change speed to random value
                 if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
@@ -45,6 +44,9 @@ void Gray::run(Data *data)
                 }
 
                 y += yDirection; // Move the gray area
+
+                lk.unlock();
+                cv.notify_all();
             }
             for (uint8_t i = 0; i < speed; i++)
             {
@@ -94,27 +96,27 @@ void Ball::run(uint8_t id, Data *data)
         {
 
             // Check if the ball collides with the gray area - gray surroundings are checked only
-            if ((x >= grayX - 1 && x <= grayX + GRAY_WIDTH) &&
+            if ((x >= grayX - 2 && x <= grayX + GRAY_WIDTH + 1) &&
                 (y <= grayY + 3 && y >= grayY - GRAY_HEIGHT - 2))
             {
                 {
-                    std::unique_lock lk(data->grayMutex);
+                    std::lock_guard lk(data->grayMutex);
 
                     is_near |= ((uint16_t)0x1 << id);
 
+                    handleGrayCollisions(id, data, xDirection, yDirection, health);
+
                     // Check if ball is inside of gray area
                     checkIfInsideGray(id, data);
-                    cv.notify_one();
-
-                    handleGrayCollisions(id, data, xDirection, yDirection, health);
                 }
+                cv.notify_all();
             }
             else
             {
                 is_near &= ~((uint16_t)0x1 << id);
                 is_inside &= ~((uint16_t)0x1 << id);
-                cv.notify_one();
                 is_touching &= ~((uint16_t)0x1 << id);
+                cv.notify_all();
 
                 handleWallCollisions(id, data, xDirection, yDirection, health);
             }
@@ -125,10 +127,10 @@ void Ball::run(uint8_t id, Data *data)
                 std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
         }
-        is_inside &= ~((uint16_t)0x1 << id);
         is_near &= ~((uint16_t)0x1 << id);
-        cv.notify_one();
+        is_inside &= ~((uint16_t)0x1 << id);
         is_touching &= ~((uint16_t)0x1 << id);
+        cv.notify_all();
         data->ballsAlive[id] = false;
     }
 }
