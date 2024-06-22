@@ -75,7 +75,7 @@ void Ball::run(uint8_t id, Data *data)
         short xDirection = rand() % 3 - 1; // <-1, 1>
 
         // Ball enters the board
-        x = grayX;
+        x = (rand() % SPAWN_X_LEN) + LOW_X_SPAWN;
         y = SPAWN_Y;
 
         // From now on the ball can be drawn on screen
