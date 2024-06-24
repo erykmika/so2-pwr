@@ -33,8 +33,8 @@ void Gray::run(Data *data)
             {
                 std::unique_lock lk(data->grayMutex);
 
-                cv.wait_for(lk, std::chrono::seconds(1), [&]()
-                            { return ((is_near && !is_inside && !is_touching) || !is_near); });
+                cv.wait(lk, []
+                        { return ((is_near && !is_inside && !is_touching) || !is_near); });
 
                 // Bounce off horizontal edges, change speed to random value
                 if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
@@ -131,6 +131,12 @@ void Ball::run(uint8_t id, Data *data)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
+        }
+        {
+            std::lock_guard lk(data->grayMutex);
+            is_near &= ~((uint16_t)0x1 << id);
+            is_inside &= ~((uint16_t)0x1 << id);
+            is_touching &= ~((uint16_t)0x1 << id);
         }
         cv.notify_all();
         data->ballsAlive[id] = false;
