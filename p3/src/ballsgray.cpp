@@ -3,13 +3,13 @@
 #include <condition_variable>
 
 /** Is ball inside of the gray area */
-uint16_t is_inside = 0x0;
+uint16_t is_inside;
 /** Is ball near the gray area */
-uint16_t is_near = 0x0;
+uint16_t is_near;
 /** Condition variable  */
 std::condition_variable cv;
 /** Is any ball touching the gray walls */
-uint16_t is_touching = 0x0;
+uint16_t is_touching;
 
 void Gray::run(Data *data)
 {
@@ -44,10 +44,7 @@ void Gray::run(Data *data)
                 }
 
                 y += yDirection; // Move the gray area
-
-                lk.unlock();
             }
-            cv.notify_all();
 
             for (uint8_t i = 0; i < speed; i++)
             {
@@ -55,7 +52,6 @@ void Gray::run(Data *data)
             }
         }
     }
-    cv.notify_all();
     data->grayAlive = false;
 }
 
@@ -263,6 +259,7 @@ void Ball::handleGrayCollisions(uint8_t &id, Data *data, short &xDirection, shor
         (y <= grayY + 4 && y >= grayY - GRAY_HEIGHT - 3))
     {
         is_touching |= ((uint16_t)0x1 << id);
+        // Avoid blocking by the walls
         if ((WINDOW_HEIGHT)-y <= 4 || y <= 3)
         {
             x += 3;
