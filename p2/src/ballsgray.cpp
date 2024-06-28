@@ -18,9 +18,6 @@ void Gray::run(Data *data)
 
         short yDirection = -1;
 
-        // Balls wait for the gray area to move unless any ball touches the gray area - then wait
-        bool touching_detected = false;
-
         while (data->exit_flag != EXIT_KEY)
         {
             {
@@ -28,28 +25,16 @@ void Gray::run(Data *data)
 
                 if (data->is_touching)
                 {
-                    touching_detected = true;
-                }
-                else
-                {
-                    touching_detected = false;
-                }
-
-                if (!touching_detected)
-                {
-                    // Bounce off horizontal edges, change speed to random value
-                    if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
-                    {
-                        yDirection = -yDirection;
-                        speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
-                    }
-                    y += yDirection; // Move the gray area
-                }
-
-                if (touching_detected)
-                {
                     continue;
                 }
+
+                // Bounce off horizontal edges, change speed to random value
+                if (y == WINDOW_HEIGHT - 2 || y - GRAY_HEIGHT == 0)
+                {
+                    yDirection = -yDirection;
+                    speed = rand() % MOD_GRAY_SPEED + MAX_GRAY_SPEED;
+                }
+                y += yDirection; // Move the gray area
             }
             for (uint8_t i = 0; i < speed; i++)
             {
@@ -88,7 +73,7 @@ void Ball::run(uint8_t id, Data *data)
 
         for (auto i = 0; i < delayLimit; i++)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(GRAY_TOUCH_HOLD));
+            std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
         }
 
         // Proper order must be kept, the gray area first, then the ball
@@ -98,16 +83,15 @@ void Ball::run(uint8_t id, Data *data)
         while (health && data->exit_flag != EXIT_KEY)
         {
             // Check if the ball collides with the gray area - gray surroundings are checked only
-            bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
-            bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
-
-            if (gray_horizontal_collision || gray_vertical_collision)
+            if (((x >= grayX - 1 && x <= grayX + 1) ||
+                 (x >= grayX + GRAY_WIDTH - 2 && x <= grayX + GRAY_WIDTH)) &&
+                (y <= grayY + 2 && y >= grayY - GRAY_HEIGHT - 1))
             {
                 {
                     std::unique_lock lk(data->grayMutex);
 
-                    gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
-                    gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
+                    bool gray_horizontal_collision = checkGrayHorizontalCollision(id, data);
+                    bool gray_vertical_collision = checkGrayVerticalCollision(id, data, xDirection);
 
                     if (gray_vertical_collision)
                     {
@@ -211,8 +195,8 @@ void Ball::run(uint8_t id, Data *data)
                 std::this_thread::sleep_for(std::chrono::milliseconds(TICK));
             }
         }
-        data->ballsAlive[id] = false;
         data->is_touching &= ~((uint16_t)0x1 << id);
+        data->ballsAlive[id] = false;
     }
 }
 
